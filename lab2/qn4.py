@@ -28,25 +28,27 @@ def main(key):
                       14,6, 61, 53, 45, 37, 29,
                       21,13, 5, 28, 20, 12, 4]
                     
-    keySelection = [14, 17, 11, 24, 1, 5, 3, 28,
-                    15, 6, 21, 10, 23, 19, 12, 4,
-                    26, 8, 16, 7, 27, 20, 13, 2,
+    keySelection = [14, 17, 11, 24, 1, 5,   3, 28,
+                    15, 6, 21, 10,  23, 19, 12, 4,
+                    26, 8, 16, 7,   27, 20, 13, 2,
                     41, 52, 31, 37, 47, 55, 30, 40,
                     51, 45, 33, 48, 44, 49, 39, 56,
                     34, 53, 46, 42, 50, 36, 29, 32]
     
     keys = ["" for i in range(16)]
+    left = ""
+    right = ""
+
+    for j in range(28): #removing parity bit and divide into two halves #PC 1
+        left += key[leftSelection[j] - 1] 
+        right += key[rightSelection[j] - 1]
     
     for i in range(16):
-        key = shift(key, i + 1)
-        left = ""
-        right = ""
-        for j in range(28): #removing parity bit and divide into two halves
-            left += key[leftSelection[j] - 1] 
-            right += key[rightSelection[j] - 1]
-        
-        for j in keySelection: #key ith selection / compression
-            keys[i] += key[j]
+        left = shift(left,i + 1)
+        right = shift(right, i + 1)
+        key = left+right        
+        for j in keySelection: #PC2
+            keys[i] += key[j - 1]
         
     for i in range(16):
         print(f"key {i + 1}  : {keys[i]}")
@@ -54,5 +56,7 @@ def main(key):
 
 if __name__ == "__main__":
     # key = input("Enter inital 64 bit key: ")
-    key = "1001100100111011100110010011101110011001001110110011101110011001"
+    key = " 00010011 00110100 01010111 01111001 10011011 10111100 11011111 11110001 "
+    key = key.replace(" ", "")
     main(key)
+
