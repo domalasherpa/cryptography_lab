@@ -68,32 +68,7 @@ def round(md, w, k):
 
     return md
 
-'''
-This function return the words and the constants for each round
-these values are calculated from the first 80 prime numbers (2, 3,…, 409)
 
-'''
-def K():
-    '''
-        k is calcultated from the powers of the first 80 prime numbers to 1/3.
-        the 64 bit fractional part after the decimal point is used as K
-    '''
-    k = [
-        2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
-        31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
-        73, 79, 83, 89, 97, 101, 103, 107, 109, 113,
-        127, 131, 137, 139, 149, 151, 157, 163, 167, 173,
-        179, 181, 191, 193, 197, 199, 211, 223, 227, 229,
-        233, 239, 241, 251, 257, 263, 269, 271, 277, 281,
-        283, 293, 307, 311, 313, 317, 331, 337, 347, 349,
-        353, 359, 367, 373, 379, 383, 389, 397, 401, 409
-    ]
-
-    for i in range(80):
-        k[i] = str(pow(k[i], 1/3)).split('.')[1]
-        print(hex(int(k[i])), "\t", k[i])
-
-        
 
 
 def main():
@@ -108,28 +83,21 @@ def main():
     message = message.encode('utf-8')   #encode the message to utf-8
     message = bin(int.from_bytes(message, 'big'))[2:]  #convert the message to binary
 
-    if(len(message) % 1024 > 896): #message is greater than 896 bits
+    if(len(message) / 1024 > 0): #message is greater than 896 bits
          #break the message into 1024 bit blocks
         length = bin(len(message)).zfill(128)
         padding = (len(message) + 128) % 1024
-        padding = 1 + zfill(padding - 1)
+        if(padding != 0):
+            padding = 1 + zfill(padding - 1)
         message = message + padding + length
+        #left to divide the message into 1024 bit chunks
     else:
-        padding = (len(message) + 128) % 1024
-        padding = bin(1) + zfill(padding - 1)
+        padding = 896 - len(message)
+        if(padding != 0):
+            padding = 1 + zfill(padding - 1
         length = bin(len(message)).zfill(128)
+        message = message + padding + length
 
-
-
-
-
-    message = message.zfill(1024)   #fill the message to 1024 bits
-    messageBlocks = [message[i:i+1024] for i in range(0, len(message), 1024)] #break the message into 1024 bit blocks
-    w = [0 for i in range(80)]  #initialize the words for each round
-    md = [0 for i in range(8)]  
-
-
-#initialize the message digest with the initial values 512 bits , 8 blocks 64 bits each
 
     K = [
         0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
