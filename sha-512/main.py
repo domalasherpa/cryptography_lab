@@ -3,10 +3,14 @@
 To do 
 
     # -Find k - default takens 
-    -message chunks
-    -padding
-    -length
+    # -message chunks
+    # -padding
+    # -length
     # -message digest - default taken
+
+    find w in hex 
+    mixer 1 
+    mixer 2 output
 
 '''
 
@@ -25,10 +29,9 @@ for a : first= 28, second= 34, third= 39
 for b: first=14, second=18, third=41
 '''
 def rotate(E, first, second, third):
-    E1, E2, E2 = E
-    E1 = (E >> first) | (E << (64 - first)) & 0xffffffff
-    E2 = (E >> second) | (E << (64 - second)) & 0xffffffff
-    E3 = (E >> third) | (E << (64 - third)) & 0xffffffff
+    E1 = (E >> first) | (E << (64 - first)) & 0xffffffffffffffffffffffffffffffff
+    E2 = (E >> second) | (E << (64 - second)) & 0xffffffffffffffffffffffffffffffff
+    E3 = (E >> third) | (E << (64 - third)) & 0xffffffffffffffffffffffffffffffff 
     return E1 ^ E2 ^ E3  #returns in integer
 
 
@@ -36,14 +39,14 @@ def rotate(E, first, second, third):
     E = mixer2 + D
 '''
 def mixer2(E, F, G, H, W, K):
-    return (conditional(E, F, G) + rotateE(E) + W + K + H) % pow(2, 64)   #mod 2 power 64 
+    return (conditional(E, F, G) + rotate(E, 14, 18, 41) + W + K + H) % pow(2, 64)   #mod 2 power 64 
 
 
 '''
     A = mixer1 + mixer2
 '''
 def mixer1(A, B, C):
-    return (majority(A, B, C) + rotateA(A)) % pow(2, 64)  #mod 2^64
+    return (majority(A, B, C) + rotate(A, 28, 34, 39)) % pow(2, 64)  #mod 2^64
 
 
 '''
@@ -68,8 +71,31 @@ def round(md, w, k):
 
     return md
 
+def sha512():
+    message = input("Enter the message: ")  
+    message = message.encode('utf-8')
+    message = hex(int.from_bytes(message, 'big'))[2:]
 
+    length = hex(len(message) * 4)
+    padLen = 1024 - (len(message) * 4) % 1024
+    padding = hex(int(pow(2, padLen - 1)))
+    length = int(length, 16)
+    padding = int(padding, 16)
+    message = int(message, 16)
+    message = hex(((message <<  padLen) | padding) << 128 | length)
 
+    #divide the message into 1024 bit blocks
+    messageBlock = []
+
+    if(len(message) > 1024 | len(message) % 1024 > 896):
+        messageBlock = [message[i:i+1024] for i in range(0, len(message), 1024)]
+    else:
+        messageBlock.append(message)
+
+    # print(messageBlock)
+
+    return messageBlock
+  
 
 def main():
 #get the message
@@ -79,27 +105,10 @@ def main():
 #break the message into 1024 bit blocks
 #calculate the number of chunks
 
-    message = input("Enter the message: ")  
-    message = message.encode('utf-8')   #encode the message to utf-8
-    message = bin(int.from_bytes(message, 'big'))[2:]  #convert the message to binary
+    
+    messageBlock = sha512()
 
-    if(len(message) / 1024 > 0): #message is greater than 896 bits
-         #break the message into 1024 bit blocks
-        length = bin(len(message)).zfill(128)
-        padding = (len(message) + 128) % 1024
-        if(padding != 0):
-            padding = 1 + zfill(padding - 1)
-        message = message + padding + length
-        #left to divide the message into 1024 bit chunks
-    else:
-        padding = 896 - len(message)
-        if(padding != 0):
-            padding = 1 + zfill(padding - 1
-        length = bin(len(message)).zfill(128)
-        message = message + padding + length
-
-
-    K = [
+    k = [
         0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
         0x3956c25bf348b538, 0x59f111f1b605d019, 0x923f82a4af194f9b, 0xab1c5ed5da6d8118,
         0xd807aa98a3030242, 0x12835b0145706fbe, 0x243185be4ee4b28c, 0x550c7dc3d5ffb4e2,
@@ -133,20 +142,25 @@ def main():
         0x5be0cd19137e2179
     ]
 
+    print(messageBlock, type(messageBlock))
 
-    for i in messageBlocks:
+    w = [0] * 80
+
+    for message in messageBlock:
+        # print(message)
+        message = [int(message[i:i+16], 16) for i in range(0, len(message), 16)]
+        print(message)
         for j in range(80):
-
             '''
-                finding the words for each rounds
+                finding the words for each rouffff ffff ffffnds
             '''
             if(j < 16):
-                w[i] = message[i]
+                w[j] = int(message[j], 16)
             else:
-                w[i] = (w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3]) << 1 | (w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3]) >> 63
+                w[j] = w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ int(w[j - 3]) << 1 | (w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3]) >> 63
 
+            print(w[j])
             
-            md = round(md, w, k)
-    
+
 if __name__ == "__main__":
-    K()
+    main()
