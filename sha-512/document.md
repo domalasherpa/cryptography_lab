@@ -9,7 +9,7 @@ SHA-512 produces a 512 bit message digest. The input message can of any length l
 1.  Get the input from the user
 2.  Convert the message into byte form
 3.  Add length bit and padding bit if necessary
-4. Divide the message into 1024 bit blocks if length of message + length + padding > 1024
+4. Divide the message into 1024 bit blocks if length of message + length > 1024 or if message > 896
 5. Initialize the 80 words constant k
 6. initialize the initial 8 words message digest.
 7. Save the copy of message digest. mdCopy = md
