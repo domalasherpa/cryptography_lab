@@ -19,14 +19,14 @@ def rotate(E, first, second, third):
     E = mixer2 + D
 
     for a : first= 28, second= 34, third= 39
-    for b: first=14, second=18, third=41
+    for e: first=14, second=18, third=41
 
 '''
 def mixer2(E, F, G, H, W, K):
-    return (conditional(E, F, G) + rotate(E, 6,11, 25) + W + K + H) % pow(2, 64)  
+    return (conditional(E, F, G) + rotate(E, 14,18, 41) + W + K + H) % pow(2, 64)  
 
 def mixer1(A, B, C):
-    return (majority(A, B, C) + rotate(A, 2, 12, 22)) % pow(2, 64)  
+    return (majority(A, B, C) + rotate(A, 28, 34, 39)) % pow(2, 64)  
 
 
 '''
@@ -136,11 +136,11 @@ def sha512():
         for i in range(80): #eighty rounds for each 1024 bit block
             mdCopy = round(mdCopy, w[i], k[i])
 
-        print("The message digest for the given message is: \n")
-        for i in range(8) :
-            md[i] = hex((md[i] + mdCopy[i]) % pow(2, 64))
-            print(md[i][2:], end = "")
-        print("\n")
-        
+    print("The message digest for the given message is: \n")
+    for i in range(8) :
+        md[i] = hex((md[i] + mdCopy[i]) % pow(2, 64))
+        print(md[i][2:], end = "")
+    print("\n")
+
 if __name__ == "__main__":
     sha512()
