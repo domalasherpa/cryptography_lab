@@ -1,14 +1,11 @@
 # SHA-512
-
 This is the documentation of the implementation of the sha-512 algorithm in python programming language.
 
 ## Introduction
 SHA-512 is a one way hashing algorithm to produce a unique message digest for an unique input.
 SHA-512 produces a 512 bit message digest. The input message can of any length less  than $2^{64}$ bits. 
 
-###  Algorithm:
-
-
+## Algorithm:
 1.  Get the input from the user
 2.  Convert the message into byte form
 3.  Add length bit and padding bit if necessary
@@ -23,7 +20,7 @@ SHA-512 produces a 512 bit message digest. The input message can of any length l
 
 ## Function used:
 
-- getInput()
+### getInput()
 
 ```python
     message = input("Enter the message: ") 
@@ -50,7 +47,7 @@ The length of the hex message is calculatted using len() method. Since, each cha
     message + padding + length 
 ```
 
-- w()
+### w()
 ```python
     w = [0] * 80
     for j in range(80):
@@ -61,48 +58,49 @@ The length of the hex message is calculatted using len() method. Since, each cha
 ```
 w function return the 80 words (64 bits) for each rounds. The first initial 16 words are same as the 16 64 bit block from the message. The rest W16-W79 are calculatted using the xor of the previous words and then left circular shift by 1.
 
-- rotate()
+
+### rotate()
 
 ```python
-def rotate(E, first, second, third):
-    bitSize = 64
-    E1 = ((E >>  first) | (E << (bitSize - first))) & ((1 << bitSize) - 1) 
-    E2 = ((E >>  second) | (E << (bitSize - second))) & ((1 << bitSize) - 1)
-    E3 = ((E >>  third) | (E << (bitSize - third))) & ((1 << bitSize) - 1)
-    return E1 ^ E2 ^ E3  #returns in integer
+    def rotate(E, first, second, third):
+        bitSize = 64
+        E1 = ((E >>  first) | (E << (bitSize - first))) & ((1 << bitSize) - 1) 
+        E2 = ((E >>  second) | (E << (bitSize - second))) & ((1 << bitSize) - 1)
+        E3 = ((E >>  third) | (E << (bitSize - third))) & ((1 << bitSize) - 1)
+        return E1 ^ E2 ^ E3  #returns in integer
 ```
 
 Rotate function gives the result of the circular right rotation of the blocks. The first, second and third is the specific length of bitwise shift for block A and E. The rotate function then return the xor operation of the shifted words.
 
-- majority()
+### majority()
 ```python
     def majority(A, B, C):
         return (A & B) ^ (B & C) ^ (C & A)
 ```
 The majority function is to calculate the bits for first word i.e A of the message digest.
 
-- conditional()
-```
+### conditional()
+```python
     def conditional(E, F, G):
         return (E & F) ^ ((~E) & G)
 ```
 The conditional function is to calculate the bits for the fifth words i.e E of the message digest.
 
-- mixer1()
+### mixer1()
 ```python
     def mixer2(E, F, G, H, W, K):
         return (conditional(E, F, G) + rotate(E, 14,18, 41) + W + K + H) % pow(2, 64) 
 ```
 The mixer1 function return the sum of the result by conditional function, the rotate operation and the corresponding constant K and w for that round, and the H word of the message digest. The sum is then mod by $2^{64}$ to make sure the result lies under 64 bit representation.
 
-- mixer2()
+### mixer2()
 ```python
     def mixer1(A, B, C):
         return (majority(A, B, C) + rotate(A, 28, 34, 39)) % pow(2, 64)  
 ```
 The mixer2 return the sum of the result by the majority function and the rotate function. The result is then mod by $2^{64}$ to make sure results lies under 64 bit representation
 
-- rounds()
+### rounds()
 ```python
 def round(md, w, k):
     d = md[3]
@@ -118,9 +116,9 @@ def round(md, w, k):
 ```
 The round function emulates the operation that happens in each 80 rounds for a message block in sha-512. In each round, the 8 64 bit words are changed. The words except "A" and "E" of position "0" and "4" are copied to the corresponding right block. The word E is calcultted by sum of word "D" and output of mixer2(). The word A is then calulatted by sum of mixer1() and mixer2() with mod $2^{64}$. 
 
--sha512()
+### sha512()
 
-```
+```python
 for message in messageBlock:
         message = [message[i:i+16] for i in range(0, len(message), 16)] #dividing the message into 16 64 bit words to cal words for each round
         w = W(message)
@@ -132,7 +130,7 @@ for message in messageBlock:
 ```
 In SHA-512 function constant k, md are initialized. Then, the messageBlock return by getInput() is iterated by message. And, each message is of 1024 bit. The message is then divied into 16 bit words to calculatted the words (W) for the rounds. The initial hash/message digest is then copied to mdCopy. The mdCopy is calculated for each rounds and for each blocks using the round(). 
 
-```
+```python
 print("The message digest for the given message is: \n")
     for i in range(8) :
         md[i] = hex((md[i] + mdCopy[i]) % pow(2, 64))
