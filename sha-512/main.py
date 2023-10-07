@@ -85,7 +85,7 @@ def W(message):
         if(j < 16):
             w[j] = int(message[j], 16)
         else:
-            w[j] = w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3] << 1 | (w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3]) >> 63
+            w[j] = (w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3]) << 1 | (w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3]) >> 63
             
     return w
 
