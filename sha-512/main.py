@@ -1,80 +1,64 @@
-#sha 512
-'''
-To do 
-
-    # -Find k - default takens 
-    # -message chunks
-    # -padding
-    # -length
-    # -message digest - default taken
-
-    find w in hex 
-    mixer 1 
-    mixer 2 output
-
-'''
-
+#sha 512 implementation in python
 def majority(A, B, C):
-    # (a AND b) xor (b and c) xor (c and a)
     return (A & B) ^ (B & C) ^ (C & A)
 
-
 def conditional(E, F, G):
-    #(e and f) xor (not e and g)
     return (E & F) ^ ((~E) & G)
 
-
-'''
-for a : first= 28, second= 34, third= 39
-for b: first=14, second=18, third=41
-'''
 def rotate(E, first, second, third):
-    E1 = (E >> first) | (E << (64 - first)) & 0xffffffffffffffffffffffffffffffff
-    E2 = (E >> second) | (E << (64 - second)) & 0xffffffffffffffffffffffffffffffff
-    E3 = (E >> third) | (E << (64 - third)) & 0xffffffffffffffffffffffffffffffff 
+    bitSize = 64
+    E1 = ((E >>  first) | (E << (bitSize - first))) & ((1 << bitSize) - 1) 
+    E2 = ((E >>  second) | (E << (bitSize - second))) & ((1 << bitSize) - 1)
+    E3 = ((E >>  third) | (E << (bitSize - third))) & ((1 << bitSize) - 1)
+    
     return E1 ^ E2 ^ E3  #returns in integer
 
 
 '''
+    A = mixer1 + mixer2
     E = mixer2 + D
+
+    for a : first= 28, second= 34, third= 39
+    for b: first=14, second=18, third=41
+
 '''
 def mixer2(E, F, G, H, W, K):
-    return (conditional(E, F, G) + rotate(E, 14, 18, 41) + W + K + H) % pow(2, 64)   #mod 2 power 64 
+    return (conditional(E, F, G) + rotate(E, 6,11, 25) + W + K + H) % pow(2, 64)  
 
-
-'''
-    A = mixer1 + mixer2
-'''
 def mixer1(A, B, C):
-    return (majority(A, B, C) + rotate(A, 28, 34, 39)) % pow(2, 64)  #mod 2^64
+    return (majority(A, B, C) + rotate(A, 2, 12, 22)) % pow(2, 64)  
 
 
 '''
     takes the 512 bit message digest
-    message digest is a dict of 8 64bit words
+    message digest is a list of 8 64 bit words
     A, B , C, D, E, F, G, H
     0, 1,  2, 3, 4, 5, 6, 7
 '''
 def round(md, w, k):
 
-    #shifting the words : B->C, C->D, E->F, F->G, G->H, except for A and E
     d = md[3]
-    for i in range(7, 0, -1):
+    #shifting the words : B->C, C->D, E->F, F->G, G->H, except for A and E
+    for i in range(7, 0, -1): 
         if(i == 0 or i == 4):
             continue
-
         md[i] = md[i - 1]
 
     mixer2Out = mixer2(md[4], md[5], md[6], md[7], w, k)
     md[4] = (d + mixer2Out) % pow(2, 64)     # e = d + mixer2 mod 2^64
-    md[0] = (mixer1(A, B, C) + mixer2Out) % pow(2, 64)# a= mixer1 + mixer2 mod 2^64
-
+    md[0] = (mixer1(md[0], md[1], md[2]) + mixer2Out) % pow(2, 64) # a= mixer1 + mixer2 mod 2^64
     return md
 
-def sha512():
-    message = input("Enter the message: ")  
+'''
+    message, padding , length  can be kept in integer.
+    instead of converting to hex and then to int
+    and, then the last message diget can be converted into hex
+'''
+
+def getInput():
+    message = input("Enter the message: ") #user input in plain text  
     message = message.encode('utf-8')
-    message = hex(int.from_bytes(message, 'big'))[2:]
+    message = hex(int.from_bytes(message, 'big'))[2:] #converts the message to hex removing the 0x
 
     length = hex(len(message) * 4)
     padLen = 1024 - (len(message) * 4) % 1024
@@ -82,7 +66,7 @@ def sha512():
     length = int(length, 16)
     padding = int(padding, 16)
     message = int(message, 16)
-    message = hex(((message <<  padLen) | padding) << 128 | length)
+    message = hex(((message <<  padLen) | padding) << 128 | length)[2:]
 
     #divide the message into 1024 bit blocks
     messageBlock = []
@@ -92,21 +76,23 @@ def sha512():
     else:
         messageBlock.append(message)
 
-    # print(messageBlock)
-
     return messageBlock
-  
 
-def main():
-#get the message
-#find the padding bits
-#append the padding bits
-#append the length of the message
-#break the message into 1024 bit blocks
-#calculate the number of chunks
+#calculates the 80 words for each round
+def W(message): 
+    w = [0] * 80
+    for j in range(80):
+        if(j < 16):
+            w[j] = int(message[j], 16)
+        else:
+            w[j] = w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3] << 1 | (w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3]) >> 63
+            
+    return w
 
-    
-    messageBlock = sha512()
+
+def sha512():
+
+    messageBlock =getInput()
 
     k = [
         0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc,
@@ -132,35 +118,29 @@ def main():
     ]
 
     md = [
-        0x6a09e667f3bcc908,
-        0xbb67ae8584caa73b,
-        0x3c6ef372fe94f82b,
-        0xa54ff53a5f1d36f1,
-        0x510e527fade682d1,
-        0x9b05688c2b3e6c1f,
-        0x1f83d9abfb41bd6b,
-        0x5be0cd19137e2179
+        0x22312194FC2BF72C,
+        0x9F555FA3C84C64C2,
+        0x2393B86B6F53B151,
+        0x963877195940EABD,
+        0x96283EE2A88EFFE3,
+        0xBE5E1E2553863992,
+        0x2B0199FC2C85B8AA,
+        0x0EB72DDC81C52CA2
     ]
 
-    print(messageBlock, type(messageBlock))
-
-    w = [0] * 80
-
     for message in messageBlock:
-        # print(message)
-        message = [int(message[i:i+16], 16) for i in range(0, len(message), 16)]
-        print(message)
-        for j in range(80):
-            '''
-                finding the words for each rouffff ffff ffffnds
-            '''
-            if(j < 16):
-                w[j] = int(message[j], 16)
-            else:
-                w[j] = w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ int(w[j - 3]) << 1 | (w[j - 16] ^ w[j - 14] ^ w[j - 8] ^ w[j - 3]) >> 63
+        message = [message[i:i+16] for i in range(0, len(message), 16)] #dividing the message into 16 64 bit words to cal words for each round
+        w = W(message)
 
-            print(w[j])
-            
+        mdCopy = md.copy()
+        for i in range(80): #eighty rounds for each 1024 bit block
+            mdCopy = round(mdCopy, w[i], k[i])
 
+        print("The message digest for the given message is: \n")
+        for i in range(8) :
+            md[i] = hex((md[i] + mdCopy[i]) % pow(2, 64))
+            print(md[i][2:], end = "")
+        print("\n")
+        
 if __name__ == "__main__":
-    main()
+    sha512()
